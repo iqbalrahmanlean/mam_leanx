@@ -1,103 +1,206 @@
-import Image from "next/image";
+"use client"
+
+import { showToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const handleSuccess = () => {
+    showToast.success("Success!", "Operation completed successfully")
+  }
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleError = () => {
+    showToast.error("Error occurred", "Something went wrong, please try again")
+  }
+
+  const handleWarning = () => {
+    showToast.warning("Warning", "Please check your input before proceeding")
+  }
+
+  const handleInfo = () => {
+    showToast.info("Information", "Here's some useful information for you")
+  }
+
+  const handleLoading = () => {
+    const loadingToast = showToast.loading("Processing...", "Please wait while we process your request")
+    
+    // Simulate async operation
+    setTimeout(() => {
+      showToast.dismiss(loadingToast)
+      showToast.success("Completed!", "Your request has been processed successfully")
+    }, 3000)
+  }
+
+  const handlePromise = () => {
+    const apiCall = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        Math.random() > 0.5 ? resolve("Data loaded") : reject("Network error")
+      }, 2000)
+    })
+
+    showToast.promise(apiCall, {
+      loading: "Loading data...",
+      success: "Data loaded successfully!",
+      error: "Failed to load data"
+    })
+  }
+
+  const handleLogin = async () => {
+    // Simulate login API call
+    const loginPromise = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const success = Math.random() > 0.3
+        if (success) {
+          resolve({ user: "John Doe", email: "john@example.com" })
+        } else {
+          reject("Invalid credentials")
+        }
+      }, 1500)
+    })
+
+    showToast.promise(loginPromise, {
+      loading: "Logging in...",
+      success: (data: any) => `Welcome back, ${data.user}!`,
+      error: "Login failed. Please check your credentials."
+    })
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold">Toast Demo with Sonner</h1>
+          <p className="text-muted-foreground">
+            Click the buttons below to see different types of toast notifications
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Basic Toasts */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Toast Types</CardTitle>
+              <CardDescription>
+                Simple toast notifications with different styles
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button onClick={handleSuccess} className="w-full">
+                Success Toast
+              </Button>
+              <Button onClick={handleError} variant="destructive" className="w-full">
+                Error Toast
+              </Button>
+              <Button onClick={handleWarning} variant="outline" className="w-full">
+                Warning Toast
+              </Button>
+              <Button onClick={handleInfo} variant="secondary" className="w-full">
+                Info Toast
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Toasts */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Advanced Toast Features</CardTitle>
+              <CardDescription>
+                Loading states and promise-based toasts
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button onClick={handleLoading} variant="outline" className="w-full">
+                Loading Toast (3s)
+              </Button>
+              <Button onClick={handlePromise} variant="outline" className="w-full">
+                Promise Toast (Random)
+              </Button>
+              <Button onClick={handleLogin} variant="default" className="w-full">
+                Simulate Login
+              </Button>
+              <Button 
+                onClick={() => showToast.dismiss()} 
+                variant="ghost" 
+                className="w-full"
+              >
+                Dismiss All Toasts
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Usage Examples */}
+        <Card>
+          <CardHeader>
+            <CardTitle>How to Use in Your Components</CardTitle>
+            <CardDescription>
+              Import and use the toast functions anywhere in your app
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-lg">
+              <pre className="text-sm overflow-x-auto">
+{`import { showToast } from "@/hooks/use-toast"
+
+// Simple usage
+showToast.success("Success!")
+showToast.error("Error occurred")
+
+// With description
+showToast.success("Login successful", "Welcome back!")
+
+// For API calls
+showToast.promise(loginAPI(), {
+  loading: "Logging in...",
+  success: "Welcome back!",
+  error: "Login failed"
+})
+
+// Loading with manual dismiss
+const loadingId = showToast.loading("Processing...")
+// Later...
+showToast.dismiss(loadingId)`}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Real-world Examples */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Real-world Examples</CardTitle>
+            <CardDescription>
+              Common scenarios where you'd use toasts
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button 
+              onClick={() => showToast.success("Profile updated", "Your changes have been saved")} 
+              variant="outline"
+            >
+              Save Profile
+            </Button>
+            <Button 
+              onClick={() => showToast.error("Upload failed", "File size too large")} 
+              variant="outline"
+            >
+              Upload File
+            </Button>
+            <Button 
+              onClick={() => showToast.info("New message", "You have 3 unread messages")} 
+              variant="outline"
+            >
+              Check Messages
+            </Button>
+            <Button 
+              onClick={() => showToast.warning("Session expiring", "Please save your work")} 
+              variant="outline"
+            >
+              Session Warning
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
+  )
 }

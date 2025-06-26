@@ -2,57 +2,25 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from "react"
 import SimpleLineChart from '@/components/ui/line-chart'
+import { DataTable } from '@/components/ui/data-table' // Import your new DataTable component
+import { ColumnDef } from "@tanstack/react-table"
 
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  flexRender,
-  ColumnDef,
-  SortingState,
-  VisibilityState,
-} from "@tanstack/react-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-  ContextMenuSeparator,
-} from "@/components/ui/context-menu"
 import {
   Home,
   Settings,
   RefreshCw,
   ChevronDown,
-  ArrowUpDown,
-  Columns,
-  Eye,
-  Check,
   Copy,
   Edit,
   Trash2,
   Download,
   ExternalLink,
   FileText,
-  Share2
+  Share2,
+  Eye,
 } from "lucide-react"
 
 type Payment = {
@@ -68,13 +36,13 @@ type Payment = {
 // Theme detection hook
 const useCurrentTheme = () => {
   const [currentTheme, setCurrentTheme] = useState('default')
-  
+
   useEffect(() => {
     const detectTheme = () => {
       if (typeof window !== 'undefined') {
         const root = document.documentElement
         const classList = root.classList
-        
+
         if (classList.contains('theme-leanx')) {
           setCurrentTheme('leanx')
         } else if (classList.contains('theme-payright')) {
@@ -84,95 +52,24 @@ const useCurrentTheme = () => {
         }
       }
     }
-    
+
     detectTheme()
-    
+
     // Listen for theme changes
     const observer = new MutationObserver(detectTheme)
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class']
     })
-    
+
     return () => observer.disconnect()
   }, [])
-  
+
   return currentTheme
-}
-
-// Move viewPresets outside component to prevent recreation
-const VIEW_PRESETS = {
-  essential: {
-    name: "Essential View",
-    icon: "📊",
-    description: "Payment Date, Invoice No, Amount",
-    columns: {
-      paymentDate: true,
-      invoice: true,
-      amount: true,
-      referenceNumber: false,
-      collection: false,
-      paymentMethod: false,
-    }
-  },
-  financial: {
-    name: "Financial View",
-    icon: "💰",
-    description: "Payment Date, Invoice No, Amount, Reference No",
-    columns: {
-      paymentDate: true,
-      invoice: true,
-      amount: true,
-      referenceNumber: true,
-      collection: false,
-      paymentMethod: false,
-    }
-  },
-  operations: {
-    name: "Operations View",
-    icon: "📄",
-    description: "Payment Date, Invoice No, Collection, Payment Method",
-    columns: {
-      paymentDate: true,
-      invoice: true,
-      collection: true,
-      paymentMethod: true,
-      referenceNumber: false,
-      amount: false,
-    }
-  },
-  full: {
-    name: "Full Details",
-    icon: "🔍",
-    description: "All columns",
-    columns: {
-      paymentDate: true,
-      referenceNumber: true,
-      collection: true,
-      invoice: true,
-      paymentMethod: true,
-      amount: true,
-    }
-  }
-} as const
-
-// Default column visibility - separate constant
-const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
-  paymentDate: true,
-  referenceNumber: true,
-  collection: true,
-  invoice: true,
-  paymentMethod: true,
-  amount: true,
 }
 
 export default function DashboardPage() {
   const currentTheme = useCurrentTheme()
-  
-  // State with proper defaults
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(DEFAULT_COLUMN_VISIBILITY)
-  const [currentView, setCurrentView] = useState<string>('full')
 
   // Sample data - memoized to prevent recreation
   const poolData = useMemo(() => ({
@@ -474,6 +371,7 @@ export default function DashboardPage() {
     }
   ], [getThemeColors])
 
+  // Payment data
   const recentPayments: Payment[] = useMemo(() => [
     {
       paymentDate: "Jul 30, 2024, 5:05:39 PM",
@@ -513,206 +411,376 @@ export default function DashboardPage() {
     }
   ], [])
 
-  // Memoized columns to prevent recreation
-  const columns: ColumnDef<Payment>[] = useMemo(() => [
-    {
-      id: 'paymentDate',
-      accessorKey: 'paymentDate',
-      header: 'PAYMENT DATE',
-      enableHiding: false,
-      cell: ({ row }) => {
-        const date = row.getValue('paymentDate') as string
-        return (
-          <div className="text-sm">
-            <div>{date.split(',')[0]},</div>
-            <div className="text-muted-foreground">
-              {date.split(',').slice(1).join(',')}
-            </div>
-          </div>
-        )
-      },
-    },
-    {
-      id: 'referenceNumber',
-      accessorKey: 'referenceNumber',
-      header: 'REFERENCE NUMBER',
-      enableHiding: true,
-      cell: ({ row }) => (
-        <span className="font-mono text-sm">{row.getValue('referenceNumber')}</span>
-      ),
-    },
-    {
-      id: 'collection',
-      accessorKey: 'collection',
-      header: 'COLLECTION',
-      enableHiding: true,
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-teal-600 border-teal-200">
-          {row.getValue('collection')}
-        </Badge>
-      ),
-    },
-    {
-      id: 'invoice',
-      accessorKey: 'invoice',
-      header: 'INVOICE #',
-      enableHiding: true,
-      cell: ({ row }) => (
-        <span className="text-teal-600">{row.getValue('invoice')}</span>
-      ),
-    },
-    {
-      id: 'paymentMethod',
-      accessorKey: 'paymentMethod',
-      header: 'PAYMENT METHOD',
-      enableHiding: true,
-      cell: ({ row }) => (
-        <Badge variant="secondary">{row.getValue('paymentMethod')}</Badge>
-      ),
-    },
-    {
-      id: 'amount',
-      accessorKey: 'amount',
-      header: 'AMOUNT',
-      enableHiding: true,
-      cell: ({ row }) => (
-        <div className="text-right font-medium">
-          <div className="text-sm">
-            <div className="text-muted-foreground">{row.original.currency}</div>
-            <div>{row.original.amount}</div>
+  // Column definitions for DataTable
+const paymentColumns: ColumnDef<Payment>[] = useMemo(() => [
+  {
+    id: 'paymentDate',
+    accessorKey: 'paymentDate',
+    header: 'PAYMENT DATE',
+    size: 180,
+    cell: ({ row }) => {
+      const date = row.getValue('paymentDate') as string
+      return (
+        <div className="text-sm min-w-[160px]">
+          <div>{date.split(',')[0]},</div>
+          <div className="text-muted-foreground">
+            {date.split(',').slice(1).join(',')}
           </div>
         </div>
-      ),
+      )
     },
-  ], [])
+  },
+  {
+    id: 'referenceNumber',
+    accessorKey: 'referenceNumber',
+    header: 'REFERENCE NUMBER',
+    size: 220, // Increase width
+    cell: ({ row }) => (
+      <div className="font-mono text-sm min-w-[200px] max-w-[220px]">
+        <span className="truncate block" title={row.getValue('referenceNumber')}>
+          {row.getValue('referenceNumber')}
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: 'collection',
+    accessorKey: 'collection',
+    header: 'COLLECTION',
+    size: 200, // Increase width
+    cell: ({ row }) => (
+      <div className="min-w-[180px] max-w-[200px]">
+        <Badge variant="outline" className="text-teal-600 border-teal-200 truncate">
+          {row.getValue('collection')}
+        </Badge>
+      </div>
+    ),
+  },
+  {
+    id: 'invoice',
+    accessorKey: 'invoice',
+    header: 'INVOICE #',
+    size: 150,
+    cell: ({ row }) => (
+      <div className="min-w-[130px] max-w-[150px]">
+        <span className="text-teal-600 truncate block" title={row.getValue('invoice')}>
+          {row.getValue('invoice')}
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: 'paymentMethod',
+    accessorKey: 'paymentMethod',
+    header: 'PAYMENT METHOD',
+    size: 160,
+    cell: ({ row }) => (
+      <div className="min-w-[140px] max-w-[160px]">
+        <Badge variant="secondary" className="truncate">
+          {row.getValue('paymentMethod')}
+        </Badge>
+      </div>
+    ),
+  },
+  {
+    id: 'amount',
+    accessorKey: 'amount',
+    header: ({ column }) => (
+      <div className="text-right">AMOUNT</div>
+    ),
+    size: 120,
+    cell: ({ row }) => (
+      <div className="text-right font-medium min-w-[100px]">
+        <div className="text-sm">
+          <div className="text-muted-foreground">{row.original.currency}</div>
+          <div>{row.original.amount}</div>
+        </div>
+      </div>
+    ),
+  },
+], [])
 
-  // Copy functions
-  const copyRowData = useCallback((row: any, format: 'json' | 'csv' | 'text' = 'json') => {
-    const rowData = row.original
-    let textToCopy = ''
+  // Filter configuration for the payment table
+  const paymentFilters = [
+    {
+      id: "invoice",
+      type: "text" as const,
+      label: "Invoice Number",
+      placeholder: "Search by invoice..."
+    },
+    {
+      id: "paymentMethod",
+      type: "multiselect" as const,
+      label: "Payment Method",
+      placeholder: "Select payment methods...",
+      options: [
+        { label: "FPX", value: "FPX SBIA" },
+        { label: "Bank Rakyat FPX", value: "BANK RAKYAT FPX" },
+        { label: "Visa/Mastercard", value: "VISA MASTERCARD" },
+        { label: "Credit Card", value: "CREDIT CARD" }
+      ]
+    },
+    {
+      id: "collection",
+      type: "text" as const,
+      label: "Collection",
+      placeholder: "Search by collection..."
+    },
+    {
+      id: "referenceNumber",
+      type: "text" as const,
+      label: "Reference Number",
+      placeholder: "Search by reference..."
+    },
+    {
+      id: "paymentDate",
+      type: "dateRange" as const,
+      label: "Payment Date Range",
+      placeholder: "Select date range..."
+    }
+  ]
 
-    switch (format) {
-      case 'json':
-        textToCopy = JSON.stringify(rowData, null, 2)
-        break
-      case 'csv':
-        const headers = Object.keys(rowData).join(',')
-        const values = Object.values(rowData).join(',')
-        textToCopy = `${headers}\n${values}`
-        break
-      case 'text':
-        textToCopy = Object.entries(rowData)
+  // Context menu actions for payment table
+  const paymentContextMenuActions = [
+    {
+      id: 'copy-row-json',
+      label: 'Copy Row (JSON)',
+      icon: Copy,
+      onClick: (row: Payment) => {
+        const textToCopy = JSON.stringify(row, null, 2)
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          alert('Row data copied as JSON!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      }
+    },
+    {
+      id: 'copy-row-csv',
+      label: 'Copy Row (CSV)',
+      icon: FileText,
+      onClick: (row: Payment) => {
+        const headers = Object.keys(row).join(',')
+        const values = Object.values(row).join(',')
+        const textToCopy = `${headers}\n${values}`
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          alert('Row data copied as CSV!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      }
+    },
+    {
+      id: 'copy-row-text',
+      label: 'Copy Row (Text)',
+      icon: Share2,
+      onClick: (row: Payment) => {
+        const textToCopy = Object.entries(row)
           .map(([key, value]) => `${key}: ${value}`)
           .join('\n')
-        break
-    }
-
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      alert(`Row data copied as ${format.toUpperCase()}!`)
-    }).catch(() => {
-      alert('Failed to copy to clipboard')
-    })
-  }, [])
-
-  const copyField = useCallback((value: string, fieldName: string) => {
-    navigator.clipboard.writeText(value).then(() => {
-      alert(`${fieldName} copied to clipboard!`)
-    }).catch(() => {
-      alert('Failed to copy to clipboard')
-    })
-  }, [])
-
-  // Function to apply view preset - with immediate state update
-  const applyViewPreset = useCallback((viewKey: keyof typeof VIEW_PRESETS) => {
-    const preset = VIEW_PRESETS[viewKey]
-    if (preset) {
-      // Use React.startTransition for immediate UI update
-      React.startTransition(() => {
-        setColumnVisibility({ ...preset.columns })
-        setCurrentView(viewKey)
-      })
-    }
-  }, [])
-
-  // Handle column visibility change with immediate update
-  const handleColumnVisibilityChange = useCallback((updater: any) => {
-    React.startTransition(() => {
-      setColumnVisibility(updater)
-      setCurrentView('custom')
-    })
-  }, [])
-
-  // Create table with optimized configuration
-  const table = useReactTable({
-    data: recentPayments,
-    columns,
-    state: {
-      sorting,
-      columnVisibility,
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          alert('Row data copied as Text!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      },
+      separator: true
     },
-    onSortingChange: setSorting,
-    onColumnVisibilityChange: handleColumnVisibilityChange,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    enableHiding: true,
-    // Add these for better performance
-    manualFiltering: false,
-    manualPagination: false,
-    manualSorting: false,
-  })
+    {
+      id: 'copy-invoice',
+      label: 'Copy Invoice #',
+      icon: Copy,
+      onClick: (row: Payment) => {
+        navigator.clipboard.writeText(row.invoice).then(() => {
+          alert('Invoice Number copied to clipboard!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      }
+    },
+    {
+      id: 'copy-reference',
+      label: 'Copy Reference #',
+      icon: Copy,
+      onClick: (row: Payment) => {
+        navigator.clipboard.writeText(row.referenceNumber).then(() => {
+          alert('Reference Number copied to clipboard!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      }
+    },
+    {
+      id: 'copy-amount',
+      label: 'Copy Amount',
+      icon: Copy,
+      onClick: (row: Payment) => {
+        navigator.clipboard.writeText(row.amount).then(() => {
+          alert('Amount copied to clipboard!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      }
+    },
+    {
+      id: 'copy-payment-method',
+      label: 'Copy Payment Method',
+      icon: Copy,
+      onClick: (row: Payment) => {
+        navigator.clipboard.writeText(row.paymentMethod).then(() => {
+          alert('Payment Method copied to clipboard!')
+        }).catch(() => {
+          alert('Failed to copy to clipboard')
+        })
+      },
+      separator: true
+    },
+    {
+      id: 'view-details',
+      label: 'View Details',
+      icon: Eye,
+      onClick: (row: Payment) => {
+        alert(`Viewing details for ${row.invoice}`)
+        // Add your navigation logic here
+      }
+    },
+    {
+      id: 'edit',
+      label: 'Edit Payment',
+      icon: Edit,
+      onClick: (row: Payment) => {
+        alert(`Editing payment ${row.invoice}`)
+        // Add your edit logic here
+      }
+    },
+    {
+      id: 'download',
+      label: 'Download Receipt',
+      icon: Download,
+      onClick: (row: Payment) => {
+        alert(`Downloading receipt for ${row.invoice}`)
+        // Add your download logic here
+      }
+    },
+    {
+      id: 'open-new-tab',
+      label: 'Open in New Tab',
+      icon: ExternalLink,
+      onClick: (row: Payment) => {
+        window.open(`/payment/${row.invoice}`, '_blank')
+      },
+      separator: true
+    },
+    {
+      id: 'delete',
+      label: 'Delete Payment',
+      icon: Trash2,
+      variant: 'destructive' as const,
+      onClick: (row: Payment) => {
+        if (confirm(`Are you sure you want to delete payment ${row.invoice}?`)) {
+          alert(`Deleted payment ${row.invoice}`)
+          // Add your delete logic here
+        }
+      }
+    }
+  ]
 
-  // Individual column toggle handler with immediate update
-  const toggleColumn = useCallback((columnId: string, visible: boolean) => {
-    React.startTransition(() => {
-      setColumnVisibility(prev => ({
-        ...prev,
-        [columnId]: visible
-      }))
-      setCurrentView('custom')
-    })
-  }, [])
+  // View presets for the payment table
+  const paymentViewPresets = {
+    essential: {
+      name: "Essential View",
+      icon: "📊",
+      description: "Payment Date, Invoice No, Amount",
+      columns: {
+        paymentDate: true,
+        invoice: true,
+        amount: true,
+        referenceNumber: false,
+        collection: false,
+        paymentMethod: false,
+      }
+    },
+    financial: {
+      name: "Financial View",
+      icon: "💰",
+      description: "Payment Date, Invoice No, Amount, Reference No",
+      columns: {
+        paymentDate: true,
+        invoice: true,
+        amount: true,
+        referenceNumber: true,
+        collection: false,
+        paymentMethod: false,
+      }
+    },
+    operations: {
+      name: "Operations View",
+      icon: "📄",
+      description: "Payment Date, Invoice No, Collection, Payment Method",
+      columns: {
+        paymentDate: true,
+        invoice: true,
+        collection: true,
+        paymentMethod: true,
+        referenceNumber: false,
+        amount: false,
+      }
+    },
+    full: {
+      name: "Full Details",
+      icon: "🔍",
+      description: "All columns",
+      columns: {
+        paymentDate: true,
+        referenceNumber: true,
+        collection: true,
+        invoice: true,
+        paymentMethod: true,
+        amount: true,
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
       {/* Header Section with Pool Information */}
-   {/* Header Section with Pool Information - Using existing CSS variables */}
-<Card className="bg-primary border-primary/20">
-  <CardContent className="p-6">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-8">
-        <div>
-          <p className="text-primary-foreground/80 text-sm font-medium">Payout Pool</p>
-          <p className="text-2xl font-bold text-primary-foreground">
-            {poolData.payout.currency} {poolData.payout.amount}
-          </p>
-        </div>
-        <div className="h-8 w-px bg-primary-foreground/30"></div>
-        <div>
-          <p className="text-primary-foreground/80 text-sm font-medium">Collection Pool</p>
-          <p className="text-2xl font-bold text-primary-foreground">
-            {poolData.collection.currency} {poolData.collection.amount}
-          </p>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-primary-foreground hover:bg-primary-foreground/10"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
-      <div className="flex items-center space-x-4">
-        <div className="text-right">
-          <p className="text-sm font-medium text-primary-foreground">LeanX Demo</p>
-          <p className="text-xs text-primary-foreground/80">LeanX Demo Sdn Bhd</p>
-        </div>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-foreground/20">
-          <span className="text-primary-foreground font-medium">👤</span>
-        </div>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+      <Card className="bg-primary border-primary/20">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-8">
+              <div>
+                <p className="text-primary-foreground/80 text-sm font-medium">Payout Pool</p>
+                <p className="text-2xl font-bold text-primary-foreground">
+                  {poolData.payout.currency} {poolData.payout.amount}
+                </p>
+              </div>
+              <div className="h-8 w-px bg-primary-foreground/30"></div>
+              <div>
+                <p className="text-primary-foreground/80 text-sm font-medium">Collection Pool</p>
+                <p className="text-2xl font-bold text-primary-foreground">
+                  {poolData.collection.currency} {poolData.collection.amount}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-primary-foreground">LeanX Demo</p>
+                <p className="text-xs text-primary-foreground/80">LeanX Demo Sdn Bhd</p>
+              </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-foreground/20">
+                <span className="text-primary-foreground font-medium">👤</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Page Header */}
       <div className="flex items-center justify-between">
@@ -822,226 +890,34 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Recent Payments Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Recent Payment</CardTitle>
-
-            {/* Controls Section */}
-            <div className="flex gap-2">
-              {/* Test Button - Quick Hide/Show Reference */}
-              <Button
-                onClick={() => {
-                  const currentlyVisible = columnVisibility.referenceNumber
-                  toggleColumn('referenceNumber', !currentlyVisible)
-                }}
-                size="sm"
-                variant={columnVisibility.referenceNumber ? "destructive" : "default"}
-              >
-                {columnVisibility.referenceNumber ? 'Hide Ref#' : 'Show Ref#'}
-              </Button>
-
-              {/* Debug Button */}
-              <Button
-                onClick={() => {
-                  console.log('=== DEBUG INFO ===')
-                  console.log('Column Visibility State:', columnVisibility)
-                  console.log('Current View:', currentView)
-                  console.log('Current Theme:', currentTheme)
-                  console.log('Theme Colors:', getThemeColors)
-                  console.log('Visible Columns:', table.getVisibleLeafColumns().map(c => c.id))
-                  console.log('Table State:', table.getState())
-                }}
-                size="sm"
-                variant="secondary"
-              >
-                Debug
-              </Button>
-
-              {/* Preset Views Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-2" />
-                    {currentView === 'custom' ? 'Custom View' :
-                      currentView in VIEW_PRESETS ? VIEW_PRESETS[currentView as keyof typeof VIEW_PRESETS].name : 'View'}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[280px]">
-                  {Object.entries(VIEW_PRESETS).map(([key, preset]) => (
-                    <DropdownMenuItem
-                      key={key}
-                      onClick={() => applyViewPreset(key as keyof typeof VIEW_PRESETS)}
-                      className={`flex items-start p-3 cursor-pointer ${currentView === key ? 'bg-accent' : ''}`}
-                    >
-                      <span className="mr-3 text-lg">{preset.icon}</span>
-                      <div className="flex-1">
-                        <div className="font-medium">{preset.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {preset.description}
-                        </div>
-                      </div>
-                      {currentView === key && (
-                        <Check className="h-4 w-4 text-primary" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Custom Column Visibility Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Columns className="h-4 w-4 mr-2" />
-                    Columns
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      const isVisible = columnVisibility[column.id] ?? true
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          checked={isVisible}
-                          onCheckedChange={(checked) => {
-                            toggleColumn(column.id, !!checked)
-                          }}
-                        >
-                          {column.id === 'referenceNumber' ? 'Reference Number' :
-                            column.id === 'paymentMethod' ? 'Payment Method' :
-                              column.id === 'paymentDate' ? 'Payment Date' :
-                                column.id.charAt(0).toUpperCase() + column.id.slice(1)}
-                        </DropdownMenuCheckboxItem>
-                      )
-                    })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className={header.id === 'amount' ? 'text-right' : ''}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <ContextMenu key={row.id}>
-                    <ContextMenuTrigger asChild>
-                      <TableRow className="cursor-context-menu hover:bg-muted/50">
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </ContextMenuTrigger>
-                    <ContextMenuContent className="w-56">
-                      {/* Copy Row Options */}
-                      <ContextMenuItem onClick={() => copyRowData(row, 'json')}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy Row (JSON)
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => copyRowData(row, 'csv')}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Copy Row (CSV)
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => copyRowData(row, 'text')}>
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Copy Row (Text)
-                      </ContextMenuItem>
-
-                      <ContextMenuSeparator />
-
-                      {/* Copy Individual Fields */}
-                      <ContextMenuItem onClick={() => copyField(row.original.invoice, 'Invoice Number')}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy Invoice #
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => copyField(row.original.referenceNumber, 'Reference Number')}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy Reference #
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => copyField(row.original.amount, 'Amount')}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy Amount
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => copyField(row.original.paymentMethod, 'Payment Method')}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy Payment Method
-                      </ContextMenuItem>
-
-                      <ContextMenuSeparator />
-
-                      {/* Additional Actions */}
-                      <ContextMenuItem onClick={() => alert(`Viewing details for ${row.original.invoice}`)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => alert(`Editing payment ${row.original.invoice}`)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Payment
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => alert(`Downloading receipt for ${row.original.invoice}`)}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Receipt
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => window.open(`/payment/${row.original.invoice}`, '_blank')}>
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Open in New Tab
-                      </ContextMenuItem>
-
-                      <ContextMenuSeparator />
-
-                      <ContextMenuItem
-                        className="text-red-600"
-                        onClick={() => {
-                          if (confirm(`Are you sure you want to delete payment ${row.original.invoice}?`)) {
-                            alert(`Deleted payment ${row.original.invoice}`)
-                          }
-                        }}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Payment
-                      </ContextMenuItem>
-                    </ContextMenuContent>
-                  </ContextMenu>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Recent Payments Table - Using DataTable Component with Context Menu */}
+      <DataTable
+        data={recentPayments}
+        columns={paymentColumns}
+        title="Recent Payment"
+        description="View and manage recent payment transactions"
+        filters={paymentFilters}
+        viewPresets={paymentViewPresets}
+        defaultView="full"
+        variant="default"
+        enableSorting
+        enableFiltering
+        enableColumnVisibility
+        enablePagination
+        enableGlobalSearch
+        enableContextMenu
+        contextMenuActions={paymentContextMenuActions}
+        searchPlaceholder="Search payments..."
+        pageSize={10}
+        pageSizeOptions={[5, 10, 20, 50]}
+        emptyMessage="No payments found"
+        onRowClick={(payment) => {
+          console.log('Payment clicked:', payment)
+          //  navigation logic here
+         
+        }}
+      />
     </div>
+
   )
 }

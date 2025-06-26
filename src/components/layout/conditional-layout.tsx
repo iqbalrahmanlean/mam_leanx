@@ -11,7 +11,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
   
   // Pages that should NOT have the dashboard layout
-  const publicPages = ['/login', '/register', '/forgot-password', '/']
+  const publicPages = ['/login', '/register', '/forgot-password', '/ui']
   
   // Check if current page should have dashboard layout
   const shouldShowDashboardLayout = !publicPages.includes(pathname)

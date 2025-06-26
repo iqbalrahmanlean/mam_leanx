@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { ColumnDef } from "@tanstack/react-table"
 import { showToast } from "@/hooks/use-toast"
+import { DataTable } from "@/components/ui/data-table" // Add our DataTable
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,7 +18,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -39,7 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { 
+import {
   Calendar,
   Star,
   Heart,
@@ -64,25 +66,396 @@ import {
   AlertCircle,
   Info,
   CheckCircle,
-  XCircle
+  XCircle,
+  Eye,
+  Copy,
+  FileText,
+  Share2,
+  ExternalLink,
+  ChevronRight,
+  DollarSign,
+  CreditCard,
+  Activity
 } from "lucide-react"
+
+// Sample data for DataTable demo
+type SampleUser = {
+  id: string
+  name: string
+  email: string
+  role: 'admin' | 'user' | 'moderator'
+  status: 'active' | 'inactive' | 'suspended'
+  lastLogin: string
+  joinDate: string
+  department: string
+  isVerified: boolean
+}
+
+type SamplePayment = {
+  id: string
+  date: string
+  amount: number
+  currency: string
+  method: string
+  status: 'completed' | 'pending' | 'failed'
+  customer: string
+  description: string
+}
 
 export default function UIShowcase() {
   const [progress, setProgress] = useState(33)
   const [isChecked, setIsChecked] = useState(false)
   const [isSwitchOn, setIsSwitchOn] = useState(false)
 
+  // Sample data for tables
+  const sampleUsers: SampleUser[] = useMemo(() => [
+    {
+      id: "1",
+      name: "John Doe",
+      email: "john@example.com",
+      role: "admin",
+      status: "active",
+      lastLogin: "2024-06-26T10:30:00Z",
+      joinDate: "2024-01-15T08:00:00Z",
+      department: "Engineering",
+      isVerified: true
+    },
+    {
+      id: "2",
+      name: "Jane Smith",
+      email: "jane@example.com",
+      role: "user",
+      status: "active",
+      lastLogin: "2024-06-25T15:45:00Z",
+      joinDate: "2024-02-20T09:30:00Z",
+      department: "Marketing",
+      isVerified: false
+    },
+    {
+      id: "3",
+      name: "Bob Wilson",
+      email: "bob@example.com",
+      role: "moderator",
+      status: "suspended",
+      lastLogin: "2024-06-20T12:15:00Z",
+      joinDate: "2024-03-10T14:20:00Z",
+      department: "Sales",
+      isVerified: true
+    }
+  ], [])
+
+  const samplePayments: SamplePayment[] = useMemo(() => [
+    {
+      id: "1",
+      date: "2024-06-26T10:30:00Z",
+      amount: 299.99,
+      currency: "USD",
+      method: "Credit Card",
+      status: "completed",
+      customer: "Alice Johnson",
+      description: "Premium subscription"
+    },
+    {
+      id: "2",
+      date: "2024-06-25T14:20:00Z",
+      amount: 49.99,
+      currency: "USD",
+      method: "PayPal",
+      status: "pending",
+      customer: "Bob Smith",
+      description: "Monthly plan"
+    },
+    {
+      id: "3",
+      date: "2024-06-24T09:15:00Z",
+      amount: 99.99,
+      currency: "USD",
+      method: "Bank Transfer",
+      status: "failed",
+      customer: "Carol Davis",
+      description: "Annual subscription"
+    }
+  ], [])
+
+  // User table columns
+  const userColumns: ColumnDef<SampleUser>[] = useMemo(() => [
+    {
+      id: 'name',
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-2">
+          <Avatar className="w-8 h-8">
+            <AvatarFallback>{row.getValue<string>("name").charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <span className="font-medium">{row.getValue("name")}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'email',
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      id: 'role',
+      accessorKey: 'role',
+      header: 'Role',
+      cell: ({ row }) => {
+        const role = row.getValue("role") as string
+        const variants = {
+          admin: "destructive",
+          moderator: "default",
+          user: "secondary"
+        }
+        return (
+          <Badge variant={variants[role as keyof typeof variants] as any}>
+            {role}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: 'department',
+      accessorKey: 'department',
+      header: 'Department',
+    },
+    {
+      id: 'status',
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string
+        const variants = {
+          active: "default",
+          inactive: "secondary",
+          suspended: "destructive"
+        }
+        return (
+          <Badge variant={variants[status as keyof typeof variants] as any}>
+            {status}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: 'isVerified',
+      accessorKey: 'isVerified',
+      header: 'Verified',
+      cell: ({ row }) => (
+        <Badge variant={row.getValue("isVerified") ? "default" : "secondary"}>
+          {row.getValue("isVerified") ? "✓ Verified" : "⚠ Unverified"}
+        </Badge>
+      ),
+    },
+  ], [])
+
+  // Payment table columns
+  const paymentColumns: ColumnDef<SamplePayment>[] = useMemo(() => [
+    {
+      id: 'customer',
+      accessorKey: 'customer',
+      header: 'Customer',
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue("customer")}</div>
+      ),
+    },
+    {
+      id: 'amount',
+      accessorKey: 'amount',
+      header: 'Amount',
+      cell: ({ row }) => {
+        const payment = row.original
+        return (
+          <div className="font-medium">
+            ${payment.amount.toFixed(2)} {payment.currency}
+          </div>
+        )
+      },
+    },
+    {
+      id: 'method',
+      accessorKey: 'method',
+      header: 'Method',
+      cell: ({ row }) => (
+        <Badge variant="outline">{row.getValue("method")}</Badge>
+      ),
+    },
+    {
+      id: 'status',
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string
+        const variants = {
+          completed: "default",
+          pending: "secondary",
+          failed: "destructive"
+        }
+        return (
+          <Badge variant={variants[status as keyof typeof variants] as any}>
+            {status}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: 'description',
+      accessorKey: 'description',
+      header: 'Description',
+    },
+  ], [])
+
+  // Filter configurations
+  const userFilters = [
+    {
+      id: "name",
+      type: "text" as const,
+      label: "Name",
+      placeholder: "Search by name..."
+    },
+    {
+      id: "role",
+      type: "multiselect" as const,
+      label: "Role",
+      placeholder: "Select roles...",
+      options: [
+        { label: "Admin", value: "admin" },
+        { label: "Moderator", value: "moderator" },
+        { label: "User", value: "user" }
+      ]
+    },
+    {
+      id: "status",
+      type: "select" as const,
+      label: "Status",
+      placeholder: "All statuses",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Suspended", value: "suspended" }
+      ]
+    },
+    {
+      id: "isVerified",
+      type: "boolean" as const,
+      label: "Email Verified"
+    }
+  ]
+
+  const paymentFilters = [
+    {
+      id: "customer",
+      type: "text" as const,
+      label: "Customer",
+      placeholder: "Search by customer..."
+    },
+    {
+      id: "method",
+      type: "multiselect" as const,
+      label: "Payment Method",
+      placeholder: "Select methods...",
+      options: [
+        { label: "Credit Card", value: "Credit Card" },
+        { label: "PayPal", value: "PayPal" },
+        { label: "Bank Transfer", value: "Bank Transfer" }
+      ]
+    },
+    {
+      id: "status",
+      type: "select" as const,
+      label: "Status",
+      options: [
+        { label: "Completed", value: "completed" },
+        { label: "Pending", value: "pending" },
+        { label: "Failed", value: "failed" }
+      ]
+    }
+  ]
+
+  // View presets
+  const userViewPresets = {
+    basic: {
+      name: "Basic Info",
+      icon: "👤",
+      description: "Name, Email, Role",
+      columns: {
+        name: true,
+        email: true,
+        role: true,
+        department: false,
+        status: false,
+        isVerified: false,
+      }
+    },
+    management: {
+      name: "Management View",
+      icon: "⚡",
+      description: "Full management details",
+      columns: {
+        name: true,
+        email: true,
+        role: true,
+        department: true,
+        status: true,
+        isVerified: true,
+      }
+    }
+  }
+
+  // Context menu actions
+  const userContextActions = [
+    {
+      id: 'view',
+      label: 'View Profile',
+      icon: Eye,
+      onClick: (row: SampleUser) => showToast.info("View", `Viewing ${row.name}'s profile`)
+    },
+    {
+      id: 'edit',
+      label: 'Edit User',
+      icon: Edit,
+      onClick: (row: SampleUser) => showToast.info("Edit", `Editing ${row.name}`)
+    },
+    {
+      id: 'copy-email',
+      label: 'Copy Email',
+      icon: Copy,
+      onClick: (row: SampleUser) => {
+        navigator.clipboard.writeText(row.email)
+        showToast.success("Copied", "Email copied to clipboard")
+      },
+      separator: true
+    },
+    {
+      id: 'delete',
+      label: 'Delete User',
+      icon: Trash2,
+      variant: 'destructive' as const,
+      onClick: (row: SampleUser) => {
+        if (confirm(`Delete ${row.name}?`)) {
+          showToast.error("Deleted", `${row.name} has been deleted`)
+        }
+      }
+    }
+  ]
+
+  // Sticky columns for payment table
+  const paymentStickyColumns = [
+    { id: 'customer', position: 'left' as const, width: 200 }
+  ]
+
   const handleToastExamples = () => {
     showToast.success("Success!", "This is a success message")
-    
+
     setTimeout(() => {
       showToast.error("Error!", "This is an error message")
     }, 1000)
-    
+
     setTimeout(() => {
       showToast.warning("Warning!", "This is a warning message")
     }, 2000)
-    
+
     setTimeout(() => {
       showToast.info("Info!", "This is an info message")
     }, 3000)
@@ -116,19 +489,124 @@ export default function UIShowcase() {
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">UI Components Showcase</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A comprehensive showcase of all available UI components in your design system. 
+            A comprehensive showcase of all available UI components in your design system.
             Use this as a reference for building your applications.
           </p>
         </div>
 
-        <Tabs defaultValue="buttons" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="tables" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="tables">Data Tables</TabsTrigger>
             <TabsTrigger value="buttons">Buttons & Actions</TabsTrigger>
             <TabsTrigger value="forms">Forms & Inputs</TabsTrigger>
             <TabsTrigger value="data">Data Display</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="layout">Layout</TabsTrigger>
           </TabsList>
+
+          {/* NEW: Data Tables Tab */}
+          <TabsContent value="tables" className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  DataTable Component
+                </CardTitle>
+                <CardDescription>
+                  Advanced table with sorting, filtering, pagination, sticky columns, and context menus
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* User Management Table */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold">User Management Table</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Features: Filtering, view presets, context menu, column visibility
+                  </p>
+                  <DataTable
+                    data={sampleUsers}
+                    columns={userColumns}
+                    title="User Management"
+                    description="Manage users and their permissions"
+                    filters={userFilters}
+                    viewPresets={userViewPresets}
+                    defaultView="management"
+                    variant="striped"
+                    enableSorting
+                    enableFiltering
+                    enableColumnVisibility
+                    enablePagination
+                    enableGlobalSearch
+                    enableContextMenu
+                    contextMenuActions={userContextActions}
+                    searchPlaceholder="Search users..."
+                    pageSize={5}
+                    pageSizeOptions={[5, 10, 20]}
+                    onRowClick={(user) => showToast.info("Row Click", `Clicked on ${user.name}`)}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Payment Table with Sticky Columns */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Payment Table (Sticky Columns)</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Features: Sticky columns, expandable rows, minimal variant
+                  </p>
+                  <DataTable
+                    data={samplePayments}
+                    columns={paymentColumns}
+                    title="Payment History"
+                    description="Track all payment transactions"
+                    filters={paymentFilters}
+                    variant="bordered"
+                    enableSorting
+                    enableFiltering
+                    enableColumnVisibility
+                    enablePagination
+                    enableGlobalSearch
+                    enableStickyColumns
+                    stickyColumns={paymentStickyColumns}
+                    enableExpanding
+                    getRowCanExpand={(row) => true}
+                    renderSubComponent={({ row }) => (
+                      <div className="p-4 bg-muted/30 rounded-lg space-y-2">
+                        <h5 className="font-semibold">Payment Details</h5>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium">Payment ID:</span> {row.original.id}
+                          </div>
+                          <div>
+                            <span className="font-medium">Date:</span> {new Date(row.original.date).toLocaleDateString()}
+                          </div>
+                          <div>
+                            <span className="font-medium">Customer:</span> {row.original.customer}
+                          </div>
+                          <div>
+                            <span className="font-medium">Description:</span> {row.original.description}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    searchPlaceholder="Search payments..."
+                    pageSize={3}
+                    onRowClick={(payment) => showToast.info("Payment", `Payment ${payment.id} clicked`)}
+                  />
+                </div>
+
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>DataTable Features</AlertTitle>
+                  <AlertDescription>
+                    The DataTable supports filtering (text, select, multiselect, date range, number range, boolean),
+                    sorting, pagination, column visibility, view presets, context menus, sticky columns,
+                    expandable rows, and custom styling variants.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Buttons & Actions Tab */}
           <TabsContent value="buttons" className="space-y-8">
@@ -149,7 +627,7 @@ export default function UIShowcase() {
                     <Button variant="link">Link</Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <h4 className="font-medium">Sizes</h4>
                   <div className="flex flex-wrap items-center gap-2">
@@ -247,12 +725,12 @@ export default function UIShowcase() {
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" type="email" placeholder="Enter your email" />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <Input id="password" type="password" placeholder="Enter your password" />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="select">Select</Label>
                     <Select>
@@ -266,7 +744,7 @@ export default function UIShowcase() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="textarea">Message</Label>
                     <Textarea id="textarea" placeholder="Enter your message" />
@@ -277,17 +755,17 @@ export default function UIShowcase() {
                   <h4 className="font-medium">Checkboxes & Switches</h4>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="terms" 
-                        checked={isChecked} 
-                        onCheckedChange={(checked) => setIsChecked(checked === true)} 
+                      <Checkbox
+                        id="terms"
+                        checked={isChecked}
+                        onCheckedChange={(checked) => setIsChecked(checked === true)}
                       />
                       <Label htmlFor="terms">Accept terms and conditions</Label>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
-                      <Switch 
-                        id="notifications" 
+                      <Switch
+                        id="notifications"
                         checked={isSwitchOn}
                         onCheckedChange={setIsSwitchOn}
                       />
@@ -386,7 +864,7 @@ export default function UIShowcase() {
                     This is a default alert message.
                   </AlertDescription>
                 </Alert>
-                
+
                 <Alert variant="destructive">
                   <XCircle className="h-4 w-4" />
                   <AlertTitle>Error</AlertTitle>
@@ -417,7 +895,6 @@ export default function UIShowcase() {
                     Info
                   </Button>
                 </div>
-                
                 <Button onClick={handleToastExamples} variant="outline" className="w-full">
                   Show All Toast Types (Sequential)
                 </Button>
@@ -445,7 +922,7 @@ export default function UIShowcase() {
                       </p>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -480,14 +957,152 @@ export default function UIShowcase() {
           </TabsContent>
         </Tabs>
 
+        {/* Code Examples Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Quick Reference
+            </CardTitle>
+            <CardDescription>Common component usage patterns</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h4 className="font-semibold">DataTable Basic Usage</h4>
+                <div className="bg-muted p-4 rounded-lg">
+                  <code className="text-sm">
+                    {`<DataTable data={users}
+columns={userColumns}
+enableSorting
+enableFiltering
+filters={userFilters}
+/>`}
+                  </code>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold">DataTable with Sticky Columns</h4>
+                <div className="bg-muted p-4 rounded-lg">
+                  <code className="text-sm">
+                    {`<DataTabledata={data}
+columns={columns}
+enableStickyColumns
+stickyColumns={[
+{ id: 'name', position: 'left' }
+]}
+/>`}
+                  </code>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold">Toast Notification</h4>
+                <div className="bg-muted p-4 rounded-lg">
+                  <code className="text-sm">
+                    {`showToast.success(
+  "Success!", 
+  "Operation completed"
+)`}
+                  </code>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold">Form with Validation</h4>
+                <div className="bg-muted p-4 rounded-lg">
+                  <code className="text-sm">
+                    {`<div className="space-y-2"><Label htmlFor="email">Email</Label>
+<Input 
+ id="email" 
+ type="email" 
+ placeholder="Enter email" 
+/>
+</div>`}
+                  </code>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h4 className="font-semibold">Status Badge</h4>
+                <div className="bg-muted p-4 rounded-lg">
+                  <code className="text-sm">
+                    {`<Badge variant={status === 'active'
+? 'default'
+: 'secondary'
+}>
+{status}
+</Badge>`}
+                  </code>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>{/* DataTable Props Reference */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              DataTable Props Reference
+            </CardTitle>
+            <CardDescription>Complete list of DataTable component properties</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-green-600">Core Props</h4>
+                <div className="space-y-2 text-sm">
+                  <div><code>data</code> - Table data array</div>
+                  <div><code>columns</code> - Column definitions</div>
+                  <div><code>title</code> - Table title</div>
+                  <div><code>description</code> - Table description</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-semibold text-blue-600">Feature Toggles</h4>
+                <div className="space-y-2 text-sm">
+                  <div><code>enableSorting</code> - Column sorting</div>
+                  <div><code>enableFiltering</code> - Advanced filters</div>
+                  <div><code>enablePagination</code> - Table pagination</div>
+                  <div><code>enableContextMenu</code> - Right-click menu</div>
+                  <div><code>enableStickyColumns</code> - Pin columns</div>
+                  <div><code>enableExpanding</code> - Collapsible rows</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-semibold text-purple-600">Configuration</h4>
+                <div className="space-y-2 text-sm">
+                  <div><code>filters</code> - Filter configurations</div>
+                  <div><code>viewPresets</code> - Column presets</div>
+                  <div><code>stickyColumns</code> - Sticky column config</div>
+                  <div><code>contextMenuActions</code> - Menu actions</div>
+                  <div><code>variant</code> - Table styling</div>
+                </div>
+              </div>
+            </div>
+
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Pro Tip</AlertTitle>
+              <AlertDescription>
+                The DataTable component is highly configurable. Start with basic props and add features as needed.
+                All filter types (text, select, multiselect, dateRange, numberRange, boolean) are supported.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
         {/* Footer */}
         <div className="flex items-center justify-center py-8 border-t">
           <p className="text-sm text-muted-foreground text-center">
-            Built with shadcn/ui components • Visit{" "}
+            Built with shadcn/ui components and TanStack Table • Visit{" "}
             <a href="https://ui.shadcn.com" className="underline" target="_blank">
               shadcn/ui
             </a>{" "}
-            for more components
+            and{" "}
+            <a href="https://tanstack.com/table" className="underline" target="_blank">
+              TanStack Table
+            </a>{" "}
+            for more information
           </p>
         </div>
       </div>

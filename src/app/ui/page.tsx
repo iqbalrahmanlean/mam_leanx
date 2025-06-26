@@ -972,8 +972,7 @@ export default function UIShowcase() {
                 <h4 className="font-semibold">DataTable Basic Usage</h4>
                 <div className="bg-muted p-4 rounded-lg">
                   <code className="text-sm">
-                    {`<DataTable data={users}
-columns={userColumns}
+                    {`<DataTable data={users}columns={userColumns}
 enableSorting
 enableFiltering
 filters={userFilters}
@@ -1010,13 +1009,7 @@ stickyColumns={[
                 <h4 className="font-semibold">Form with Validation</h4>
                 <div className="bg-muted p-4 rounded-lg">
                   <code className="text-sm">
-                    {`<div className="space-y-2"><Label htmlFor="email">Email</Label>
-<Input 
- id="email" 
- type="email" 
- placeholder="Enter email" 
-/>
-</div>`}
+                    {`<div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" placeholder="Enter email" /></div>`}
                   </code>
                 </div>
               </div>
@@ -1024,12 +1017,7 @@ stickyColumns={[
                 <h4 className="font-semibold">Status Badge</h4>
                 <div className="bg-muted p-4 rounded-lg">
                   <code className="text-sm">
-                    {`<Badge variant={status === 'active'
-? 'default'
-: 'secondary'
-}>
-{status}
-</Badge>`}
+                    {`<Badge variant={status === 'active'? 'default': 'secondary'}>{status}</Badge>`}
                   </code>
                 </div>
               </div>

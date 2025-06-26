@@ -9,7 +9,16 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Input } from "@/components/ui/input"
 import { authUtils } from "@/lib/auth"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,7 +92,24 @@ interface SidebarProps {
 export function Sidebar({ className = "" }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [openMenus, setOpenMenus] = useState<string[]>([]) // Track which menus are open
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
   const pathname = usePathname()
+
+  // Sample data for search
+  const recentSearches = [
+    "Payment transactions",
+    "Customer analytics",
+    "Product inventory",
+    "Monthly reports"
+  ]
+
+  const quickActions = [
+    { label: "Create Collection", icon: Plus },
+    { label: "Add Product", icon: Package },
+    { label: "New Customer", icon: Users },
+    { label: "Generate Report", icon: FileText }
+  ]
 
   const menuSections = [
     {
@@ -115,7 +141,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
             }
           ]
         },
-         {
+        {
           id: "product",
           label: "Products",
           icon: Package,
@@ -132,7 +158,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
               label: "Category Product",
               href: "/products/categories",
             },
-             {
+            {
               id: "subcategories-products",
               label: "Subcategory Product",
               href: "/products/subcategories",
@@ -144,47 +170,82 @@ export function Sidebar({ className = "" }: SidebarProps) {
           label: "Customers",
           icon: Users,
           href: "/customers",
-        },   
+        },
         {
           id: "account",
           label: "Accounts",
           icon: User,
           href: "/accounts",
           badge: null,
-        },  
+        },
         {
           id: "payout",
           label: "Pay Out",
           icon: DollarSign,
           href: "/payout",
-        },     
+        },
         {
           id: "poolfund",
           label: "Pool Fund",
           icon: PieChart,
           href: "/poolfund",
           badge: null,
-        },  
+        },
         {
           id: "settlement",
           label: "Settlement",
           icon: CreditCard,
           href: "/settlement",
-        },  
+        },
         {
           id: "report",
           label: "Report",
           icon: FileText,
           href: "/report",
           badge: null,
-        },  
+        },
         {
-          id: "api",
-          label: "API",
+          id: "api-1",
+          label: "API Management",
           icon: Settings,
           href: "/api",
           badge: null,
-        },  
+        },
+        {
+          id: "api-2",
+          label: "Webhooks",
+          icon: Settings,
+          href: "/webhooks",
+          badge: null,
+        },
+        {
+          id: "api-3",
+          label: "Integrations",
+          icon: Settings,
+          href: "/integrations",
+          badge: null,
+        },
+        {
+          id: "api-4",
+          label: "API Docs",
+          icon: Settings,
+          href: "/api-docs",
+          badge: null,
+        },
+        {
+          id: "api-5",
+          label: "API Keys",
+          icon: Settings,
+          href: "/api-keys",
+          badge: null,
+        },
+        {
+          id: "api-6",
+          label: "Rate Limits",
+          icon: Settings,
+          href: "/rate-limits",
+          badge: null,
+        },
       ]
     },
   ]
@@ -201,31 +262,31 @@ export function Sidebar({ className = "" }: SidebarProps) {
   }
 
   const toggleMenu = (menuId: string) => {
-    setOpenMenus(prev => 
-      prev.includes(menuId) 
+    setOpenMenus(prev =>
+      prev.includes(menuId)
         ? prev.filter(id => id !== menuId)
         : [...prev, menuId]
     )
   }
 
- const handleLogout = () => {
-  authUtils.logout()
-}
+  const handleLogout = () => {
+    authUtils.logout()
+  }
 
   const renderSubmenuItem = (subItem: any, parentActive: boolean, isLast: boolean = false) => {
     const active = isActive(subItem.href)
-    
+
     return (
       <div key={subItem.id} className="relative">
         {/* Vertical line connecting to parent */}
         <div className="absolute left-6 top-0 bottom-0 w-px bg-border" />
-        
+
         {/* Horizontal line to submenu item */}
         <div className="absolute left-6 top-4 w-4 h-px bg-border" />
-        
+
         {/* Small dot at the end of horizontal line */}
         <div className="absolute left-9 top-4 w-1 h-1 bg-border rounded-full transform -translate-y-0.5" />
-        
+
         <Link href={subItem.href}>
           <Button
             variant={active ? "secondary" : "ghost"}
@@ -250,12 +311,12 @@ export function Sidebar({ className = "" }: SidebarProps) {
     const hasSubmenu = item.hasSubmenu && item.submenu
     const isOpen = isMenuOpen(item.id)
 
-    
     if (isCollapsed && hasSubmenu) {
       return (
         <DropdownMenu key={item.id}>
           <DropdownMenuTrigger asChild>
             <Button
+              data-tour={`${item.id}-link`}
               variant={active ? "secondary" : "ghost"}
               size="sm"
               className="w-full justify-center p-2 relative"
@@ -290,6 +351,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
           <TooltipTrigger asChild>
             <Link href={item.href}>
               <Button
+                data-tour={`${item.id}-link`}
                 variant={active ? "secondary" : "ghost"}
                 size="sm"
                 className="w-full justify-center p-2 relative"
@@ -318,6 +380,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
           <Collapsible open={isOpen} onOpenChange={() => toggleMenu(item.id)}>
             <CollapsibleTrigger asChild>
               <Button
+                data-tour={`${item.id}-link`}
                 variant={active ? "secondary" : "ghost"}
                 className="w-full justify-start h-auto p-3"
               >
@@ -347,7 +410,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
             <CollapsibleContent className="space-y-1 pb-2">
               {/* Main vertical line for the submenu group */}
               <div className="relative">
-                {item.submenu.map((subItem: any, index: number) => 
+                {item.submenu.map((subItem: any, index: number) =>
                   renderSubmenuItem(subItem, active, index === item.submenu.length - 1)
                 )}
               </div>
@@ -361,6 +424,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
     return (
       <Link key={item.id} href={item.href}>
         <Button
+          data-tour={`${item.id}-link`}
           variant={active ? "secondary" : "ghost"}
           className="w-full justify-start h-auto p-3"
         >
@@ -385,13 +449,16 @@ export function Sidebar({ className = "" }: SidebarProps) {
 
   return (
     <div className={`${className} flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-80'}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+      {/* STICKY HEADER */}
+      <div
+        data-tour="sidebar-header"
+        className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800"
+      >
         {!isCollapsed && (
           <div className="flex items-center space-x-2">
-            <img 
-              src="https://leanx.io/images/300ppi/logo.png"   
-              alt="LeanX Logo" 
+            <img
+              src="https://leanx.io/images/300ppi/logo.png"
+              alt="LeanX Logo"
               className="w-8 h-8 object-contain"
             />
             <div>
@@ -400,7 +467,9 @@ export function Sidebar({ className = "" }: SidebarProps) {
             </div>
           </div>
         )}
+        {/* Collapse Button */}
         <Button
+          data-tour="collapse-button"
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -414,31 +483,106 @@ export function Sidebar({ className = "" }: SidebarProps) {
         </Button>
       </div>
 
-      {/* Navigation */}
-      <ScrollArea className="flex-1 px-4 py-2">
-        <div className="space-y-4">
-          {menuSections.map((section, sectionIndex) => (
-            <div key={sectionIndex}>
-              {!isCollapsed && (
-                <>
-                  {sectionIndex > 0 && <Separator className="my-4" />}
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-2">
-                    {section.title}
-                  </h4>
-                </>
-              )}
-              <div className="space-y-1">
-                {section.items.map(renderNavigationItem)}
+      {/* STICKY SEARCH SECTION */}
+      {!isCollapsed && (
+        <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800">
+          <Dialog>
+            <DialogTrigger asChild>
+              <div
+                data-tour="search-section"
+                className="relative cursor-pointer"
+              >
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search collections, products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
+                  readOnly
+                />
+                <kbd className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  ⌘K
+                </kbd>
               </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Search</DialogTitle>
+                <DialogDescription>
+                  Search across products, orders, customers, and more
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Type to search..."
+                    className="pl-10"
+                    autoFocus
+                  />
+                </div>
 
-      {/* Sticky Footer with User Dropdown */}
-      <div className="border-t border-gray-200 dark:border-gray-800 p-4">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Recent Searches</h4>
+                  {recentSearches.map((search, index) => (
+                    <Button key={index} variant="ghost" className="w-full justify-start">
+                      <Search className="mr-2 h-4 w-4" />
+                      {search}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Quick Actions</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {quickActions.map((action, index) => {
+                      const Icon = action.icon
+                      return (
+                        <Button key={index} variant="ghost" className="justify-start">
+                          <Icon className="mr-2 h-4 w-4" />
+                          {action.label}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+
+      {/* SCROLLABLE NAVIGATION - Only this part scrolls */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="px-4 py-2">
+            <div className="space-y-4">
+              {menuSections.map((section, sectionIndex) => (
+                <div key={sectionIndex}>
+                  {!isCollapsed && (
+                    <>
+                      {sectionIndex > 0 && <Separator className="my-4" />}
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 py-2">
+                        {section.title}
+                      </h4>
+                    </>
+                  )}
+                  <div className="space-y-1">
+                    {section.items.map(renderNavigationItem)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* STICKY FOOTER */}
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 p-4">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger data-tour="user-profile" asChild>
             {isCollapsed ? (
               // Collapsed state - just avatar
               <Button variant="ghost" className="w-full p-2">

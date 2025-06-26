@@ -412,93 +412,93 @@ export default function DashboardPage() {
   ], [])
 
   // Column definitions for DataTable
-const paymentColumns: ColumnDef<Payment>[] = useMemo(() => [
-  {
-    id: 'paymentDate',
-    accessorKey: 'paymentDate',
-    header: 'PAYMENT DATE',
-    size: 180,
-    cell: ({ row }) => {
-      const date = row.getValue('paymentDate') as string
-      return (
-        <div className="text-sm min-w-[160px]">
-          <div>{date.split(',')[0]},</div>
-          <div className="text-muted-foreground">
-            {date.split(',').slice(1).join(',')}
+  const paymentColumns: ColumnDef<Payment>[] = useMemo(() => [
+    {
+      id: 'paymentDate',
+      accessorKey: 'paymentDate',
+      header: 'PAYMENT DATE',
+      size: 180,
+      cell: ({ row }) => {
+        const date = row.getValue('paymentDate') as string
+        return (
+          <div className="text-sm min-w-[160px]">
+            <div>{date.split(',')[0]},</div>
+            <div className="text-muted-foreground">
+              {date.split(',').slice(1).join(',')}
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      id: 'referenceNumber',
+      accessorKey: 'referenceNumber',
+      header: 'REFERENCE NUMBER',
+      size: 220, // Increase width
+      cell: ({ row }) => (
+        <div className="font-mono text-sm min-w-[200px] max-w-[220px]">
+          <span className="truncate block" title={row.getValue('referenceNumber')}>
+            {row.getValue('referenceNumber')}
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: 'collection',
+      accessorKey: 'collection',
+      header: 'COLLECTION',
+      size: 200, // Increase width
+      cell: ({ row }) => (
+        <div className="min-w-[180px] max-w-[200px]">
+          <Badge variant="outline" className="text-teal-600 border-teal-200 truncate">
+            {row.getValue('collection')}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      id: 'invoice',
+      accessorKey: 'invoice',
+      header: 'INVOICE #',
+      size: 150,
+      cell: ({ row }) => (
+        <div className="min-w-[130px] max-w-[150px]">
+          <span className="text-teal-600 truncate block" title={row.getValue('invoice')}>
+            {row.getValue('invoice')}
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: 'paymentMethod',
+      accessorKey: 'paymentMethod',
+      header: 'PAYMENT METHOD',
+      size: 160,
+      cell: ({ row }) => (
+        <div className="min-w-[140px] max-w-[160px]">
+          <Badge variant="secondary" className="truncate">
+            {row.getValue('paymentMethod')}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      id: 'amount',
+      accessorKey: 'amount',
+      header: ({ column }) => (
+        <div className="text-right">AMOUNT</div>
+      ),
+      size: 120,
+      cell: ({ row }) => (
+        <div className="text-right font-medium min-w-[100px]">
+          <div className="text-sm">
+            <div className="text-muted-foreground">{row.original.currency}</div>
+            <div>{row.original.amount}</div>
           </div>
         </div>
-      )
+      ),
     },
-  },
-  {
-    id: 'referenceNumber',
-    accessorKey: 'referenceNumber',
-    header: 'REFERENCE NUMBER',
-    size: 220, // Increase width
-    cell: ({ row }) => (
-      <div className="font-mono text-sm min-w-[200px] max-w-[220px]">
-        <span className="truncate block" title={row.getValue('referenceNumber')}>
-          {row.getValue('referenceNumber')}
-        </span>
-      </div>
-    ),
-  },
-  {
-    id: 'collection',
-    accessorKey: 'collection',
-    header: 'COLLECTION',
-    size: 200, // Increase width
-    cell: ({ row }) => (
-      <div className="min-w-[180px] max-w-[200px]">
-        <Badge variant="outline" className="text-teal-600 border-teal-200 truncate">
-          {row.getValue('collection')}
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    id: 'invoice',
-    accessorKey: 'invoice',
-    header: 'INVOICE #',
-    size: 150,
-    cell: ({ row }) => (
-      <div className="min-w-[130px] max-w-[150px]">
-        <span className="text-teal-600 truncate block" title={row.getValue('invoice')}>
-          {row.getValue('invoice')}
-        </span>
-      </div>
-    ),
-  },
-  {
-    id: 'paymentMethod',
-    accessorKey: 'paymentMethod',
-    header: 'PAYMENT METHOD',
-    size: 160,
-    cell: ({ row }) => (
-      <div className="min-w-[140px] max-w-[160px]">
-        <Badge variant="secondary" className="truncate">
-          {row.getValue('paymentMethod')}
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    id: 'amount',
-    accessorKey: 'amount',
-    header: ({ column }) => (
-      <div className="text-right">AMOUNT</div>
-    ),
-    size: 120,
-    cell: ({ row }) => (
-      <div className="text-right font-medium min-w-[100px]">
-        <div className="text-sm">
-          <div className="text-muted-foreground">{row.original.currency}</div>
-          <div>{row.original.amount}</div>
-        </div>
-      </div>
-    ),
-  },
-], [])
+  ], [])
 
   // Filter configuration for the payment table
   const paymentFilters = [
@@ -914,7 +914,7 @@ const paymentColumns: ColumnDef<Payment>[] = useMemo(() => [
         onRowClick={(payment) => {
           console.log('Payment clicked:', payment)
           //  navigation logic here
-         
+
         }}
       />
     </div>

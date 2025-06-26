@@ -184,123 +184,18 @@ export function DashboardHeader() {
   ]
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-      <div className="flex items-center justify-between">
+   <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-5">
+      <div className="flex items-center justify-end">
         {/* Left Section - Page Info */}
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {getPageTitle()}
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {getPageDescription()}
-            </p>
-          </div>
-
-          {/* Page Actions */}
-          <div className="hidden lg:flex items-center space-x-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Refresh data</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Filter data</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Download className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Export data</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
+      
 
         {/* Right Section - Search, Notifications, Theme Controls, User */}
         <div className="flex items-center space-x-4">
           {/* Search Dialog */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  type="text"
-                  placeholder="Search products, orders, customers..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsSearchFocused(true)}
-                  className="pl-10 pr-4 py-2 w-64 lg:w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600"
-                />
-                <kbd className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-                  ⌘K
-                </kbd>
-              </div>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Search</DialogTitle>
-                <DialogDescription>
-                  Search across products, orders, customers, and more
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Type to search..."
-                    className="pl-10"
-                    autoFocus
-                  />
-                </div>
+        
 
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Recent Searches</h4>
-                  {recentSearches.map((search, index) => (
-                    <Button key={index} variant="ghost" className="w-full justify-start">
-                      <Search className="mr-2 h-4 w-4" />
-                      {search}
-                    </Button>
-                  ))}
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Quick Actions</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {quickActions.map((action, index) => {
-                      const Icon = action.icon
-                      return (
-                        <Button key={index} variant="ghost" className="justify-start">
-                          <Icon className="mr-2 h-4 w-4" />
-                          {action.label}
-                        </Button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Notifications */}
-          <DropdownMenu>
+     
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="h-5 w-5" />
@@ -336,10 +231,10 @@ export function DashboardHeader() {
                 View all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           {/* Theme Controls Section */}
-          <div className="flex items-center space-x-2 border-l border-gray-200 dark:border-gray-700 pl-4">
+          {/* <div className="flex items-center space-x-2 border-l border-gray-200 dark:border-gray-700 pl-4"> */}
             {/* Theme Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -375,7 +270,7 @@ export function DashboardHeader() {
 
             {/* Dark/Light Mode Toggle */}
             <ThemeToggleButton />
-          </div>
+          {/* </div> */}
 
           {/* User Menu */}
           {/* <DropdownMenu>

@@ -2,6 +2,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { showToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -37,7 +38,8 @@ import {
   Fingerprint,
   Globe,
   Check,
-  X
+  X,
+  Smartphone
 } from "lucide-react"
 
 import { useTranslation } from 'react-i18next'
@@ -350,12 +352,21 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
 
-
             </CardContent>
           </Card>
 
           {/* Footer */}
           <div className="space-y-4">
+            {/* OTP Demo Link */}
+            <div className="flex justify-center">
+              <Link href="/otp-demo">
+                <Button variant="outline" size="sm" className="text-muted-foreground hover:text-foreground border-dashed">
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  Try OTP Component Demo
+                </Button>
+              </Link>
+            </div>
+
             {/* Language Selector */}
             <div className="flex justify-center">
               <Dialog>

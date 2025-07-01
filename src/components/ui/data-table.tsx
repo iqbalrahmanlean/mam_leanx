@@ -7,14 +7,14 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getExpandedRowModel, // Add this for collapsible rows
+  getExpandedRowModel,
   flexRender,
   ColumnDef,
   SortingState,
   VisibilityState,
   ColumnFiltersState,
   PaginationState,
-  ExpandedState, // Add this
+  ExpandedState,
   FilterFn,
 } from "@tanstack/react-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,7 +54,7 @@ import {
 } from "@/components/ui/context-menu"
 import {
   ChevronDown,
-  ChevronRight, // Add this for collapsible rows
+  ChevronRight,
   Search,
   Filter,
   Columns,
@@ -126,7 +126,6 @@ export interface ContextMenuAction {
   separator?: boolean
 }
 
-// Add sticky column interface
 export interface StickyColumn {
   id: string
   position: 'left' | 'right'
@@ -149,8 +148,8 @@ export interface DataTableProps<TData, TValue> {
   enablePagination?: boolean
   enableGlobalSearch?: boolean
   enableContextMenu?: boolean
-  enableExpanding?: boolean // Add this for collapsible rows
-  enableStickyColumns?: boolean // Add this for sticky columns
+  enableExpanding?: boolean
+  enableStickyColumns?: boolean
 
   // Filter configuration
   filters?: FilterConfig[]
@@ -209,7 +208,7 @@ const customFilterFns: Record<string, FilterFn<any>> = {
   }
 }
 
-// Filter Components (same as before - TextFilter, SelectFilter, etc.)
+// Filter Components
 const TextFilter: React.FC<{
   value: string
   onChange: (value: string) => void
@@ -357,17 +356,17 @@ export function DataTable<TData, TValue>({
   enablePagination = true,
   enableGlobalSearch = true,
   enableContextMenu = false,
-  enableExpanding = false, // Add this
-  enableStickyColumns = false, // Add this
+  enableExpanding = false,
+  enableStickyColumns = false,
   filters = [],
   viewPresets = {},
   defaultView = 'default',
   pageSize = 10,
   pageSizeOptions = [10, 20, 30, 40, 50],
   contextMenuActions = [],
-  stickyColumns = [], // Add this
-  getRowCanExpand, // Add this
-  renderSubComponent, // Add this
+  stickyColumns = [],
+  getRowCanExpand,
+  renderSubComponent,
   title,
   description,
   searchPlaceholder = "Search all columns...",
@@ -385,9 +384,9 @@ export function DataTable<TData, TValue>({
     pageSize,
   })
   const [currentView, setCurrentView] = useState(defaultView)
-  const [expanded, setExpanded] = useState<ExpandedState>({}) // Add this for collapsible rows
+  const [expanded, setExpanded] = useState<ExpandedState>({})
 
-  // Copy functions for context menu (same as before)
+  // Copy functions for context menu
   const copyRowData = useCallback((row: any, format: 'json' | 'csv' | 'text' = 'json') => {
     const rowData = row.original
     let textToCopy = ''
@@ -423,7 +422,7 @@ export function DataTable<TData, TValue>({
     })
   }, [])
 
-  // Default context menu actions (same as before)
+  // Default context menu actions
   const defaultContextMenuActions: ContextMenuAction[] = [
     {
       id: 'copy-row-json',
@@ -615,21 +614,22 @@ export function DataTable<TData, TValue>({
     }
   }, [columnFilters])
 
-  // Render table row with optional context menu and expandable support
+  // FIXED: Render table row with proper structure - Alternative approach
   const renderTableRow = useCallback((row: any) => {
-  const rowContent = (
-    <>
+    const mainRowContent = (
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
         className={`w-full ${onRowClick ? "cursor-pointer" : ""} ${enableContextMenu ? "cursor-context-menu" : ""} hover:bg-muted/50`}
         onClick={() => onRowClick?.(row.original)}
+        suppressHydrationWarning
       >
         {row.getVisibleCells().map((cell: any, index: number) => (
           <TableCell
             key={cell.id}
             style={getStickyStyle(cell.column.id, index)}
             className="px-4 py-2"
+            suppressHydrationWarning
           >
             {/* Add expand/collapse button for first cell if expandable */}
             {enableExpanding && index === 0 && getRowCanExpand?.(row) && (
@@ -656,49 +656,54 @@ export function DataTable<TData, TValue>({
           </TableCell>
         ))}
       </TableRow>
-
-      {/* Render expanded content if row is expanded */}
-      {enableExpanding && row.getIsExpanded() && renderSubComponent && (
-        <TableRow key={`${row.id}-expanded`} className="w-full">
-          <TableCell colSpan={row.getVisibleCells().length} className="w-full">
-            {renderSubComponent({ row })}
-          </TableCell>
-        </TableRow>
-      )}
-    </>
-  )
-
-  if (enableContextMenu && finalContextMenuActions.length > 0) {
-    return (
-      <ContextMenu key={row.id}>
-        <ContextMenuTrigger asChild>
-          {/* FIXED: Remove the div wrapper */}
-          <tbody className="contents">
-            {rowContent}
-          </tbody>
-        </ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          {finalContextMenuActions.map((action, index) => (
-            <React.Fragment key={action.id}>
-              <ContextMenuItem
-                onClick={() => action.onClick(row)}
-                className={action.variant === 'destructive' ? 'text-red-600' : ''}
-              >
-                {action.icon && <action.icon className="mr-2 h-4 w-4" />}
-                {action.label}
-              </ContextMenuItem>
-              {action.separator && index < finalContextMenuActions.length - 1 && (
-                <ContextMenuSeparator />
-              )}
-            </React.Fragment>
-          ))}
-        </ContextMenuContent>
-      </ContextMenu>
     )
-  }
 
-  return <React.Fragment key={row.id}>{rowContent}</React.Fragment>
-}, [onRowClick, enableContextMenu, finalContextMenuActions, enableExpanding, getRowCanExpand, renderSubComponent, getStickyStyle])
+    const expandedRowContent = enableExpanding && row.getIsExpanded() && renderSubComponent && (
+      <TableRow key={`${row.id}-expanded`} className="w-full" suppressHydrationWarning>
+        <TableCell colSpan={row.getVisibleCells().length} className="w-full">
+          {renderSubComponent({ row })}
+        </TableCell>
+      </TableRow>
+    )
+
+    // FIXED: Apply ContextMenu only to the main row, not the expanded content
+    if (enableContextMenu && finalContextMenuActions.length > 0) {
+      return (
+        <React.Fragment key={row.id}>
+          <ContextMenu>
+            <ContextMenuTrigger asChild>
+              {mainRowContent}
+            </ContextMenuTrigger>
+            <ContextMenuContent className="w-56">
+              {finalContextMenuActions.map((action, index) => (
+                <React.Fragment key={action.id}>
+                  <ContextMenuItem
+                    onClick={() => action.onClick(row)}
+                    className={action.variant === 'destructive' ? 'text-red-600' : ''}
+                  >
+                    {action.icon && <action.icon className="mr-2 h-4 w-4" />}
+                    {action.label}
+                  </ContextMenuItem>
+                  {action.separator && index < finalContextMenuActions.length - 1 && (
+                    <ContextMenuSeparator />
+                  )}
+                </React.Fragment>
+              ))}
+            </ContextMenuContent>
+          </ContextMenu>
+          {expandedRowContent}
+        </React.Fragment>
+      )
+    }
+
+    // Return both main row and expanded content without context menu
+    return (
+      <React.Fragment key={row.id}>
+        {mainRowContent}
+        {expandedRowContent}
+      </React.Fragment>
+    )
+  }, [onRowClick, enableContextMenu, finalContextMenuActions, enableExpanding, getRowCanExpand, renderSubComponent, getStickyStyle])
 
   // Table configuration
   const table = useReactTable({
@@ -710,25 +715,25 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       globalFilter,
       pagination,
-      expanded, // Add this for collapsible rows
+      expanded,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
-    onExpandedChange: setExpanded, // Add this for collapsible rows
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getFilteredRowModel: enableFiltering ? getFilteredRowModel() : undefined,
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
-    getExpandedRowModel: enableExpanding ? getExpandedRowModel() : undefined, // Add this
-    getRowCanExpand: getRowCanExpand, // Add this
+    getExpandedRowModel: enableExpanding ? getExpandedRowModel() : undefined,
+    getRowCanExpand: getRowCanExpand,
     filterFns: customFilterFns,
     enableSorting,
     enableFilters: enableFiltering,
     enableGlobalFilter: enableGlobalSearch,
-    enableExpanding, // Add this
+    enableExpanding,
     manualPagination: false,
   })
 
@@ -741,7 +746,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <Card className={cn("w-full", className)}>
+    <Card className={cn("w-full", className)} suppressHydrationWarning>
       {(title || description) && (
         <CardHeader>
           {title && <CardTitle>{title}</CardTitle>}
@@ -750,7 +755,7 @@ export function DataTable<TData, TValue>({
       )}
 
       <CardContent className="space-y-4">
-        {/* Controls Bar (same as before) */}
+        {/* Controls Bar */}
         <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-4 lg:items-center lg:justify-between">
           {/* Left side - Search and Filters */}
           <div className="flex flex-col space-y-2 lg:flex-row lg:space-y-0 lg:space-x-2 lg:items-center">
@@ -874,61 +879,61 @@ export function DataTable<TData, TValue>({
 
         {/* Table with horizontal scroll for sticky columns */}
         <div className="rounded-md border overflow-x-auto">
-          <Table className={cn(tableVariants[variant], "min-w-full table-fixed")}>
-          <TableHeader>
-  {table.getHeaderGroups().map((headerGroup) => (
-    <TableRow key={headerGroup.id}>
-      {headerGroup.headers.map((header, index) => (
-        <TableHead 
-          key={header.id}
-          style={{
-            ...getStickyStyle(header.id, index),
-            width: header.getSize(),
-            minWidth: header.getSize(),
-          }}
-          className={cn(
-            "px-4 py-2 text-left",
-            header.id === 'amount' && "text-right"
-          )}
-        >
-          {header.isPlaceholder ? null : (
-            <div
-              className={cn(
-                "flex items-center space-x-2",
-                header.column.getCanSort() && "cursor-pointer select-none",
-                header.id === 'amount' && "justify-end"
-              )}
-              onClick={header.column.getToggleSortingHandler()}
-            >
-              {flexRender(
-                header.column.columnDef.header,
-                header.getContext()
-              )}
-              {header.column.getCanSort() && (
-                <div className="flex flex-col">
-                  {header.column.getIsSorted() === "asc" && (
-                    <SortAsc className="h-4 w-4" />
-                  )}
-                  {header.column.getIsSorted() === "desc" && (
-                    <SortDesc className="h-4 w-4" />
-                  )}
-                  {!header.column.getIsSorted() && (
-                    <div className="h-4 w-4" />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </TableHead>
-      ))}
-    </TableRow>
-  ))}
-</TableHeader>
-            <TableBody>
+          <Table className={cn(tableVariants[variant], "min-w-full table-fixed")} suppressHydrationWarning>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header, index) => (
+                    <TableHead 
+                      key={header.id}
+                      style={{
+                        ...getStickyStyle(header.id, index),
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                      }}
+                      className={cn(
+                        "px-4 py-2 text-left",
+                        header.id === 'amount' && "text-right"
+                      )}
+                    >
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={cn(
+                            "flex items-center space-x-2",
+                            header.column.getCanSort() && "cursor-pointer select-none",
+                            header.id === 'amount' && "justify-end"
+                          )}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {header.column.getCanSort() && (
+                            <div className="flex flex-col">
+                              {header.column.getIsSorted() === "asc" && (
+                                <SortAsc className="h-4 w-4" />
+                              )}
+                              {header.column.getIsSorted() === "desc" && (
+                                <SortDesc className="h-4 w-4" />
+                              )}
+                              {!header.column.getIsSorted() && (
+                                <div className="h-4 w-4" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody suppressHydrationWarning>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => renderTableRow(row))
               ) : (
-                <TableRow>
+                <TableRow suppressHydrationWarning>
                   <TableCell
                     colSpan={columns.length}
                     className="h-24 text-center"
@@ -941,7 +946,7 @@ export function DataTable<TData, TValue>({
           </Table>
         </div>
 
-        {/* Pagination (same as before) */}
+        {/* Pagination */}
         {enablePagination && (
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center space-x-2">
@@ -1009,6 +1014,5 @@ export function DataTable<TData, TValue>({
         )}
       </CardContent>
     </Card>
-
   )
 }

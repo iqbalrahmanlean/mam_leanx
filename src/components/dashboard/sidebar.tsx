@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { authUtils } from "@/lib/auth"
+import { RecentPages } from "./recent-pages"
 import {
   Dialog,
   DialogContent,
@@ -121,23 +122,27 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: Home,
           href: "/dashboard",
           badge: null,
+          description: "Main dashboard overview"
         },
         {
           id: "collection",
           label: "Collection",
           icon: Layers,
           href: "/collection",
+          description: "Manage your collections",
           hasSubmenu: true,
           submenu: [
             {
               id: "view-collection",
               label: "View Collection",
               href: "/collection/view",
+              description: "Browse all collections"
             },
             {
               id: "view-payments",
               label: "View Payments",
               href: "/collection/payments",
+              description: "View payment history"
             }
           ]
         },
@@ -146,22 +151,26 @@ export function Sidebar({ className = "" }: SidebarProps) {
           label: "Products",
           icon: Package,
           href: "/products",
+          description: "Product management",
           hasSubmenu: true,
           submenu: [
             {
               id: "manage-products",
               label: "Manage Products",
               href: "/products/manage",
+              description: "Add, edit, remove products"
             },
             {
               id: "categories-products",
               label: "Category Product",
               href: "/products/categories",
+              description: "Manage product categories"
             },
             {
               id: "subcategories-products",
               label: "Subcategory Product",
               href: "/products/subcategories",
+              description: "Manage product subcategories"
             },
           ]
         },
@@ -170,6 +179,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
           label: "Customers",
           icon: Users,
           href: "/customers",
+          description: "Customer management"
         },
         {
           id: "account",
@@ -177,12 +187,14 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: User,
           href: "/accounts",
           badge: null,
+          description: "Account settings"
         },
         {
           id: "payout",
           label: "Pay Out",
           icon: DollarSign,
           href: "/payout",
+          description: "Manage payouts"
         },
         {
           id: "poolfund",
@@ -190,12 +202,14 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: PieChart,
           href: "/poolfund",
           badge: null,
+          description: "Pool fund management"
         },
         {
           id: "settlement",
           label: "Settlement",
           icon: CreditCard,
           href: "/settlement",
+          description: "Settlement processing"
         },
         {
           id: "report",
@@ -203,6 +217,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: FileText,
           href: "/report",
           badge: null,
+          description: "Analytics and reports"
         },
         {
           id: "api-1",
@@ -210,13 +225,15 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: Settings,
           href: "/api",
           badge: null,
+          description: "API configuration"
         },
         {
           id: "api-2",
           label: "Webhooks",
-          icon: Settings,
+          icon: Zap,
           href: "/webhooks",
           badge: null,
+          description: "Webhook management"
         },
         {
           id: "api-3",
@@ -224,13 +241,15 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: Settings,
           href: "/integrations",
           badge: null,
+          description: "Third-party integrations"
         },
         {
           id: "api-4",
           label: "API Docs",
-          icon: Settings,
+          icon: FileText,
           href: "/api-docs",
           badge: null,
+          description: "API documentation"
         },
         {
           id: "api-5",
@@ -238,6 +257,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: Settings,
           href: "/api-keys",
           badge: null,
+          description: "Manage API keys"
         },
         {
           id: "api-6",
@@ -245,6 +265,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
           icon: Settings,
           href: "/rate-limits",
           badge: null,
+          description: "API rate limiting"
         },
       ]
     },
@@ -577,6 +598,15 @@ export function Sidebar({ className = "" }: SidebarProps) {
             </div>
           </div>
         </ScrollArea>
+      </div>
+
+      {/* RECENT PAGES SECTION */}
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 p-4">
+        <RecentPages 
+          isCollapsed={isCollapsed}
+          maxItems={3}
+          className=""
+        />
       </div>
 
       {/* STICKY FOOTER */}

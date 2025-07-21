@@ -73,6 +73,7 @@ import {
   FileText,
   Share2,
   Eye,
+  Plus,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -345,6 +346,52 @@ const BooleanFilter: React.FC<{
   </div>
 )
 
+// Filter Pill Component
+const FilterPill: React.FC<{
+  filter: FilterConfig
+  value: any
+  onRemove: () => void
+}> = ({ filter, value, onRemove }) => {
+  const getDisplayValue = () => {
+    if (filter.type === 'multiselect' && Array.isArray(value)) {
+      return value.length > 1 ? `${value.length} selected` : value[0] || ''
+    }
+    if (filter.type === 'select' && filter.options) {
+      const option = filter.options.find(opt => opt.value.toString() === value?.toString())
+      return option?.label || value
+    }
+    if (filter.type === 'dateRange' && Array.isArray(value)) {
+      const [start, end] = value
+      if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
+      if (start) return `From ${formatDate(start)}`
+      if (end) return `Until ${formatDate(end)}`
+    }
+    if (filter.type === 'numberRange' && Array.isArray(value)) {
+      const [min, max] = value
+      if (min !== undefined && max !== undefined) return `${min} - ${max}`
+      if (min !== undefined) return `≥ ${min}`
+      if (max !== undefined) return `≤ ${max}`
+    }
+    return value?.toString() || ''
+  }
+
+  return (
+    <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-muted text-sm">
+      <span className="text-muted-foreground">{filter.label}</span>
+      <span className="text-foreground font-medium">is</span>
+      <span className="text-foreground">{getDisplayValue()}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-4 w-4 p-0 hover:bg-muted-foreground/20 ml-1"
+        onClick={onRemove}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  )
+}
+
 export function DataTable<TData, TValue>({
   data,
   columns,
@@ -369,7 +416,7 @@ export function DataTable<TData, TValue>({
   renderSubComponent,
   title,
   description,
-  searchPlaceholder = "Search all columns...",
+  searchPlaceholder = "Search",
   emptyMessage = "No results found.",
   onRowClick,
   onRowSelect,
@@ -409,14 +456,6 @@ export function DataTable<TData, TValue>({
 
     navigator.clipboard.writeText(textToCopy).then(() => {
       console.log(`Row data copied as ${format.toUpperCase()}!`)
-    }).catch(() => {
-      console.error('Failed to copy to clipboard')
-    })
-  }, [])
-
-  const copyField = useCallback((value: string, fieldName: string) => {
-    navigator.clipboard.writeText(value).then(() => {
-      console.log(`${fieldName} copied to clipboard!`)
     }).catch(() => {
       console.error('Failed to copy to clipboard')
     })
@@ -484,9 +523,6 @@ export function DataTable<TData, TValue>({
   // Use custom context menu actions or defaults
   const finalContextMenuActions = contextMenuActions.length > 0 ? contextMenuActions : defaultContextMenuActions
 
-  // Active filters count
-  const activeFiltersCount = columnFilters.length + (globalFilter ? 1 : 0)
-
   // Apply view preset
   const applyViewPreset = useCallback((viewKey: string) => {
     const preset = viewPresets[viewKey]
@@ -537,84 +573,7 @@ export function DataTable<TData, TValue>({
     return {}
   }, [enableStickyColumns, stickyColumns])
 
-  // Filter component renderer
-  const renderFilter = useCallback((filter: FilterConfig) => {
-    const columnFilter = columnFilters.find(f => f.id === filter.id)
-    const value = columnFilter?.value
-
-    const updateFilter = (newValue: any) => {
-      if (newValue === "" || newValue === undefined ||
-        (Array.isArray(newValue) && newValue.length === 0)) {
-        setColumnFilters(prev => prev.filter(f => f.id !== filter.id))
-      } else {
-        setColumnFilters(prev => [
-          ...prev.filter(f => f.id !== filter.id),
-          { id: filter.id, value: newValue }
-        ])
-      }
-    }
-
-    switch (filter.type) {
-      case 'text':
-        return (
-          <TextFilter
-            value={value as string}
-            onChange={updateFilter}
-            placeholder={filter.placeholder}
-          />
-        )
-      case 'select':
-        return (
-          <SelectFilter
-            value={value as string}
-            onChange={updateFilter}
-            options={filter.options || []}
-            placeholder={filter.placeholder}
-          />
-        )
-      case 'multiselect':
-        return (
-          <MultiSelectFilter
-            value={value as string[]}
-            onChange={updateFilter}
-            options={filter.options || []}
-            placeholder={filter.placeholder}
-          />
-        )
-      case 'dateRange':
-        return (
-          <DateRangeFilter
-            value={value as [Date?, Date?]}
-            onChange={updateFilter}
-            placeholder={filter.placeholder}
-          />
-        )
-      case 'numberRange':
-        return (
-          <NumberRangeFilter
-            value={value as [number?, number?]}
-            onChange={updateFilter}
-            placeholder={filter.placeholder}
-          />
-        )
-      case 'boolean':
-        return (
-          <BooleanFilter
-            value={value as boolean | undefined}
-            onChange={updateFilter}
-            label={filter.label}
-          />
-        )
-      case 'custom':
-        return filter.component ? (
-          <filter.component value={value} onChange={updateFilter} />
-        ) : null
-      default:
-        return null
-    }
-  }, [columnFilters])
-
-  // FIXED: Render table row with proper structure - Alternative approach
+  // Render table row
   const renderTableRow = useCallback((row: any) => {
     const mainRowContent = (
       <TableRow
@@ -631,7 +590,6 @@ export function DataTable<TData, TValue>({
             className="px-4 py-2"
             suppressHydrationWarning
           >
-            {/* Add expand/collapse button for first cell if expandable */}
             {enableExpanding && index === 0 && getRowCanExpand?.(row) && (
               <Button
                 variant="ghost"
@@ -666,7 +624,6 @@ export function DataTable<TData, TValue>({
       </TableRow>
     )
 
-    // FIXED: Apply ContextMenu only to the main row, not the expanded content
     if (enableContextMenu && finalContextMenuActions.length > 0) {
       return (
         <React.Fragment key={row.id}>
@@ -696,7 +653,6 @@ export function DataTable<TData, TValue>({
       )
     }
 
-    // Return both main row and expanded content without context menu
     return (
       <React.Fragment key={row.id}>
         {mainRowContent}
@@ -704,6 +660,36 @@ export function DataTable<TData, TValue>({
       </React.Fragment>
     )
   }, [onRowClick, enableContextMenu, finalContextMenuActions, enableExpanding, getRowCanExpand, renderSubComponent, getStickyStyle])
+
+  // Remove filter
+  const removeFilter = useCallback((filterId: string) => {
+    setColumnFilters(prev => prev.filter(f => f.id !== filterId))
+  }, [])
+
+  // Clear all filters
+  const clearAllFilters = useCallback(() => {
+    setColumnFilters([])
+    setGlobalFilter("")
+  }, [])
+
+  // Get active filter pills
+  const activeFilterPills = columnFilters.map(columnFilter => {
+    const filter = filters.find(f => f.id === columnFilter.id)
+    if (!filter || !columnFilter.value) return null
+
+    // Skip empty values
+    if (Array.isArray(columnFilter.value) && columnFilter.value.length === 0) return null
+    if (columnFilter.value === "" || columnFilter.value === undefined) return null
+
+    return (
+      <FilterPill
+        key={filter.id}
+        filter={filter}
+        value={columnFilter.value}
+        onRemove={() => removeFilter(filter.id)}
+      />
+    )
+  }).filter(Boolean)
 
   // Table configuration
   const table = useReactTable({
@@ -755,10 +741,103 @@ export function DataTable<TData, TValue>({
       )}
 
       <CardContent className="space-y-4">
-        {/* Controls Bar */}
-        <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-4 lg:items-center lg:justify-between">
-          {/* Left side - Search and Filters */}
-          <div className="flex flex-col space-y-2 lg:flex-row lg:space-y-0 lg:space-x-2 lg:items-center">
+        {/* Top Controls */}
+        <div className="flex items-center justify-between">
+          {/* Left side - Filter Pills and Controls */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Active Filter Pills */}
+            {activeFilterPills}
+
+            {/* Add Filter Button */}
+            {enableFiltering && filters.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    Add filter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64">
+                  <div className="p-2">
+                    {filters.map((filter) => {
+                      // Don't show filters that are already active
+                      const isActive = columnFilters.some(f => f.id === filter.id)
+                      if (isActive) return null
+
+                      return (
+                        <DropdownMenuItem
+                          key={filter.id}
+                          className="cursor-pointer py-3 px-4"
+                          onClick={() => {
+                            // Add filter with empty value to show it as active
+                            if (filter.type === 'select' && filter.options && filter.options.length > 0) {
+                              // For select, start with first option selected
+                              setColumnFilters(prev => [
+                                ...prev.filter(f => f.id !== filter.id),
+                                { id: filter.id, value: filter.options![0].value.toString() }
+                              ])
+                            } else if (filter.type === 'text') {
+                              // For text filters, add empty string
+                              setColumnFilters(prev => [
+                                ...prev.filter(f => f.id !== filter.id),
+                                { id: filter.id, value: '' }
+                              ])
+                            } else if (filter.type === 'multiselect') {
+                              // For multiselect, add empty array
+                              setColumnFilters(prev => [
+                                ...prev.filter(f => f.id !== filter.id),
+                                { id: filter.id, value: [] }
+                              ])
+                            } else if (filter.type === 'dateRange') {
+                              // For date range, add empty array
+                              setColumnFilters(prev => [
+                                ...prev.filter(f => f.id !== filter.id),
+                                { id: filter.id, value: [] }
+                              ])
+                            } else if (filter.type === 'numberRange') {
+                              // For number range, add empty array  
+                              setColumnFilters(prev => [
+                                ...prev.filter(f => f.id !== filter.id),
+                                { id: filter.id, value: [] }
+                              ])
+                            } else if (filter.type === 'boolean') {
+                              // For boolean, start with true
+                              setColumnFilters(prev => [
+                                ...prev.filter(f => f.id !== filter.id),
+                                { id: filter.id, value: true }
+                              ])
+                            }
+                          }}
+                        >
+                          {filter.label}
+                        </DropdownMenuItem>
+                      )
+                    })}
+                    {/* Show message if no filters available */}
+                    {filters.every(filter => columnFilters.some(f => f.id === filter.id)) && (
+                      <div className="py-3 px-4 text-sm text-muted-foreground">
+                        All filters are already active
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Clear All Button */}
+            {(activeFilterPills.length > 0 || globalFilter) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="h-8 text-muted-foreground hover:text-foreground"
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
+
+          {/* Right side - Search and Controls */}
+          <div className="flex items-center space-x-2">
             {/* Global Search */}
             {enableGlobalSearch && (
               <div className="relative">
@@ -767,56 +846,11 @@ export function DataTable<TData, TValue>({
                   placeholder={searchPlaceholder}
                   value={globalFilter || ""}
                   onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="pl-9 lg:w-64"
+                  className="pl-9 w-64"
                 />
               </div>
             )}
 
-            {/* Filters Toggle */}
-            {enableFiltering && filters.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                    {activeFiltersCount > 0 && (
-                      <Badge variant="secondary" className="ml-2">
-                        {activeFiltersCount}
-                      </Badge>
-                    )}
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-80">
-                  <div className="p-4 space-y-4">
-                    {filters.map((filter) => (
-                      <div key={filter.id} className="space-y-2">
-                        <Label className="text-sm font-medium">{filter.label}</Label>
-                        {renderFilter(filter)}
-                      </div>
-                    ))}
-                    {activeFiltersCount > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setColumnFilters([])
-                          setGlobalFilter("")
-                        }}
-                        className="w-full"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Clear Filters
-                      </Button>
-                    )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-
-          {/* Right side - View Controls */}
-          <div className="flex space-x-2">
             {/* View Presets */}
             {Object.keys(viewPresets).length > 0 && (
               <DropdownMenu>
@@ -877,6 +911,123 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
 
+        {/* Active Filter Inputs Section */}
+        {enableFiltering && columnFilters.some(f => {
+          const filter = filters.find(filter => filter.id === f.id)
+          return filter && (
+            f.value === '' ||
+            (Array.isArray(f.value) && f.value.length === 0) ||
+            (f.value !== '' && f.value !== undefined && (!Array.isArray(f.value) || f.value.length > 0))
+          )
+        }) && (
+            <div className="border rounded-lg p-4 bg-muted/20 space-y-4">
+              {columnFilters.map((columnFilter) => {
+                const filter = filters.find(f => f.id === columnFilter.id)
+                if (!filter) return null
+
+                // Only show filters that need input or have values
+                const hasValue = columnFilter.value !== '' && columnFilter.value !== undefined &&
+                  (!Array.isArray(columnFilter.value) || columnFilter.value.length > 0)
+                const needsInput = columnFilter.value === '' ||
+                  (Array.isArray(columnFilter.value) && columnFilter.value.length === 0)
+
+                if (!hasValue && !needsInput) return null
+
+                const updateFilter = (newValue: any) => {
+                  if (newValue === "" || newValue === undefined ||
+                    (Array.isArray(newValue) && newValue.length === 0)) {
+                    setColumnFilters(prev => prev.filter(f => f.id !== filter.id))
+                  } else {
+                    setColumnFilters(prev => [
+                      ...prev.filter(f => f.id !== filter.id),
+                      { id: filter.id, value: newValue }
+                    ])
+                  }
+                }
+
+                const renderFilterInput = () => {
+                  const value = columnFilter.value
+
+                  switch (filter.type) {
+                    case 'text':
+                      return (
+                        <TextFilter
+                          value={value as string}
+                          onChange={updateFilter}
+                          placeholder={filter.placeholder}
+                        />
+                      )
+                    case 'select':
+                      return (
+                        <SelectFilter
+                          value={value as string}
+                          onChange={updateFilter}
+                          options={filter.options || []}
+                          placeholder={filter.placeholder}
+                        />
+                      )
+                    case 'multiselect':
+                      return (
+                        <MultiSelectFilter
+                          value={value as string[]}
+                          onChange={updateFilter}
+                          options={filter.options || []}
+                          placeholder={filter.placeholder}
+                        />
+                      )
+                    case 'dateRange':
+                      return (
+                        <DateRangeFilter
+                          value={value as [Date?, Date?]}
+                          onChange={updateFilter}
+                          placeholder={filter.placeholder}
+                        />
+                      )
+                    case 'numberRange':
+                      return (
+                        <NumberRangeFilter
+                          value={value as [number?, number?]}
+                          onChange={updateFilter}
+                          placeholder={filter.placeholder}
+                        />
+                      )
+                    case 'boolean':
+                      return (
+                        <BooleanFilter
+                          value={value as boolean | undefined}
+                          onChange={updateFilter}
+                          label={filter.label}
+                        />
+                      )
+                    default:
+                      return null
+                  }
+                }
+
+                return (
+                  <div key={filter.id} className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <Label className="text-sm font-medium min-w-[120px] text-right">
+                        {filter.label}
+                      </Label>
+                      <div className="flex-1 max-w-[400px]">
+                        {renderFilterInput()}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFilter(filter.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
         {/* Table with horizontal scroll for sticky columns */}
         <div className="rounded-md border overflow-x-auto">
           <Table className={cn(tableVariants[variant], "min-w-full table-fixed")} suppressHydrationWarning>
@@ -884,7 +1035,7 @@ export function DataTable<TData, TValue>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header, index) => (
-                    <TableHead 
+                    <TableHead
                       key={header.id}
                       style={{
                         ...getStickyStyle(header.id, index),

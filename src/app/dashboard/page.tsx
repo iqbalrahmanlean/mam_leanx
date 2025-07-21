@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react"
 import SimpleLineChart from '@/components/ui/line-chart'
 import { DataTable } from '@/components/ui/data-table' // Import your new DataTable component
+// import DataTable from '@/components/ui/data-table'
 import { ColumnDef } from "@tanstack/react-table"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

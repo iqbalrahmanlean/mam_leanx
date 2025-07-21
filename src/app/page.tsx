@@ -23,7 +23,7 @@ export default function Home() {
 
   const handleLoading = () => {
     const loadingToast = showToast.loading("Processing...", "Please wait while we process your request")
-    
+
     // Simulate async operation
     setTimeout(() => {
       showToast.dismiss(loadingToast)
@@ -88,7 +88,7 @@ export default function Home() {
               <Button onClick={handleSuccess} className="w-full">
                 Success Toast
               </Button>
-              <Button onClick={handleError} variant="destructive" className="w-full">
+            <Button onClick={handleError} variant="destructive" className="w-full">
                 Error Toast
               </Button>
               <Button onClick={handleWarning} variant="outline" className="w-full">
@@ -118,9 +118,9 @@ export default function Home() {
               <Button onClick={handleLogin} variant="default" className="w-full">
                 Simulate Login
               </Button>
-              <Button 
-                onClick={() => showToast.dismiss()} 
-                variant="ghost" 
+              <Button
+                onClick={() => showToast.dismiss()}
+                variant="ghost"
                 className="w-full"
               >
                 Dismiss All Toasts
@@ -140,7 +140,7 @@ export default function Home() {
           <CardContent>
             <div className="bg-muted p-4 rounded-lg">
               <pre className="text-sm overflow-x-auto">
-{`import { showToast } from "@/hooks/use-toast"
+                {`import { showToast } from "@/hooks/use-toast"
 
 // Simple usage
 showToast.success("Success!")
@@ -174,26 +174,26 @@ showToast.dismiss(loadingId)`}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button 
-              onClick={() => showToast.success("Profile updated", "Your changes have been saved")} 
+            <Button
+              onClick={() => showToast.success("Profile updated", "Your changes have been saved")}
               variant="outline"
             >
               Save Profile
             </Button>
-            <Button 
-              onClick={() => showToast.error("Upload failed", "File size too large")} 
+            <Button
+              onClick={() => showToast.error("Upload failed", "File size too large")}
               variant="outline"
             >
               Upload File
             </Button>
-            <Button 
-              onClick={() => showToast.info("New message", "You have 3 unread messages")} 
+            <Button
+              onClick={() => showToast.info("New message", "You have 3 unread messages")}
               variant="outline"
             >
               Check Messages
             </Button>
-            <Button 
-              onClick={() => showToast.warning("Session expiring", "Please save your work")} 
+            <Button
+              onClick={() => showToast.warning("Session expiring", "Please save your work")}
               variant="outline"
             >
               Session Warning
